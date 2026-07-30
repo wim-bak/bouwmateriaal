@@ -93,6 +93,8 @@ async function buildAll() {
       "nanoid",
       "zod",
       "zod-validation-error",
+      // pdfkit heeft filesystem-fonts nodig; niet bundelen
+      "pdfkit",
     ],
     logLevel: "info",
   });
