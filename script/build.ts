@@ -68,7 +68,14 @@ async function buildAll() {
     outfile: "api/index.js",
     // Node laadt api/index.js als ESM (package.json type=module). Behoud default export.
     banner: {
-      js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
+      js: [
+        "import { createRequire } from 'node:module';",
+        "import { fileURLToPath } from 'node:url';",
+        "import { dirname as __esm_dirname } from 'node:path';",
+        "const require = createRequire(import.meta.url);",
+        "const __filename = fileURLToPath(import.meta.url);",
+        "const __dirname = __esm_dirname(__filename);",
+      ].join("\n"),
     },
     define: {
       "process.env.NODE_ENV": '"production"',
