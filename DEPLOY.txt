@@ -1,0 +1,15 @@
+Bouwmateriaal AI Lab — Deployment
+==================================
+
+Deployed preview URL (permanent, shareable):
+https://www.perplexity.ai/computer/a/bouwmateriaal-ai-lab-f0TTb9AmTOK6ChGbX412QA
+
+deploy_website arguments:
+  project_path = /home/user/workspace/bouwmateriaal-ai-lab/dist/public
+  site_name    = Bouwmateriaal AI Lab
+  entry_point  = index.html
+
+Note: this is a preview deploy only (deploy_website). Not published to pplx.app.
+The backend (Express + Anthropic + pdfkit + SQLite) runs on port 5000 and is
+proxied via the __PORT_5000__ rewrite. The production server was started with:
+  NODE_ENV=production node dist/index.cjs  (api_credentials: llm-api:website)
