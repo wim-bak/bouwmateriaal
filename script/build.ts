@@ -60,7 +60,7 @@ async function buildAll() {
 
   console.log("bundling Vercel serverless function (api/index.js)...");
   await esbuild({
-    entryPoints: ["api/index.ts"],
+    entryPoints: ["src/serverless-entry.ts"],
     platform: "node",
     target: "node20",
     bundle: true,
