@@ -1,6 +1,6 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "node:fs/promises";
+import { rm, readFile, mkdir, writeFile } from "node:fs/promises";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -36,7 +36,7 @@ async function buildAll() {
   console.log("building client...");
   await viteBuild();
 
-  console.log("building server...");
+  console.log("building server (dev/local)...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));
   const allDeps = [
     ...Object.keys(pkg.dependencies || {}),
@@ -57,6 +57,25 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  // Bundel ook api/index.ts voor Vercel serverless. Vercel-only.
+  if (process.env.VERCEL) {
+    console.log("building Vercel api handler...");
+    await esbuild({
+      entryPoints: ["api/index.ts"],
+      platform: "node",
+      bundle: true,
+      format: "cjs",
+      outfile: "api/index.js",
+      define: {
+        "process.env.NODE_ENV": '"production"',
+      },
+      external: externals,
+      logLevel: "info",
+    });
+    // Verwijder de originele .ts zodat Vercel de .js pakt.
+    await rm("api/index.ts");
+  }
 }
 
 buildAll().catch((err) => {
