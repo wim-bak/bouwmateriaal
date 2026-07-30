@@ -4,26 +4,43 @@ import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 import { desc, sql, and, eq } from "drizzle-orm";
 
-const TURSO_URL = process.env.TURSO_DATABASE_URL;
-const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN;
+// Lazy client-initialisatie zodat env-vars pas op eerste request gelezen worden.
+let _client: ReturnType<typeof createClient> | null = null;
+let _db: ReturnType<typeof drizzle> | null = null;
 
-if (!TURSO_URL) {
-  throw new Error("TURSO_DATABASE_URL is niet gezet. Voeg 'm toe aan je environment variables.");
+function getClient() {
+  if (_client) return _client;
+  const url = process.env.TURSO_DATABASE_URL;
+  const token = process.env.TURSO_AUTH_TOKEN;
+  if (!url) {
+    throw new Error(
+      `TURSO_DATABASE_URL ontbreekt in de runtime. process.env keys: ${Object.keys(process.env).filter(k => !k.startsWith('AWS_') && !k.startsWith('LAMBDA_')).slice(0, 30).join(', ')}`,
+    );
+  }
+  _client = createClient({ url, authToken: token });
+  return _client;
 }
 
-const client = createClient({
-  url: TURSO_URL,
-  authToken: TURSO_TOKEN,
+export const client = new Proxy({} as any, {
+  get(_target, prop) {
+    return (getClient() as any)[prop];
+  },
 });
 
-export const db = drizzle(client);
+export const db: ReturnType<typeof drizzle> = new Proxy({} as any, {
+  get(_target, prop) {
+    if (!_db) _db = drizzle(getClient());
+    return (_db as any)[prop];
+  },
+});
 
 let schemaReady: Promise<void> | null = null;
 
 async function ensureSchema(): Promise<void> {
   if (schemaReady) return schemaReady;
+  const c = getClient();
   schemaReady = (async () => {
-    await client.batch([
+    await c.batch([
       "CREATE TABLE IF NOT EXISTS leads (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, company TEXT, email TEXT, material TEXT NOT NULL, organization TEXT, challenge TEXT, ambition TEXT, resultJson TEXT, consent INTEGER DEFAULT 0, consentAt TEXT, createdAt TEXT DEFAULT (datetime('now')))",
       "CREATE TABLE IF NOT EXISTS material_queries (id INTEGER PRIMARY KEY AUTOINCREMENT, material TEXT NOT NULL, organization TEXT, challenge TEXT, ambition TEXT, createdAt TEXT DEFAULT (datetime('now')))",
       "CREATE TABLE IF NOT EXISTS alert_state (id INTEGER PRIMARY KEY AUTOINCREMENT, day TEXT NOT NULL, kind TEXT NOT NULL, level TEXT NOT NULL, sentAt TEXT DEFAULT (datetime('now')))",
@@ -42,8 +59,7 @@ async function ensureSchema(): Promise<void> {
   return schemaReady;
 }
 
-// Warm-up: schema aanmaken bij eerste import (in serverless: bij eerste request)
-ensureSchema().catch((err) => console.error("Schema init faalde:", err));
+// Schema wordt lazy aangemaakt bij eerste queryStorage-operatie
 
 export type LimitKind = "generate" | "pdf";
 export type LimitScope = "total" | "email";

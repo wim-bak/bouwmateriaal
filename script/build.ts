@@ -64,8 +64,12 @@ async function buildAll() {
     platform: "node",
     target: "node20",
     bundle: true,
-    format: "cjs",
+    format: "esm",
     outfile: "api/index.js",
+    // Node laadt api/index.js als ESM (package.json type=module). Behoud default export.
+    banner: {
+      js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
+    },
     define: {
       "process.env.NODE_ENV": '"production"',
     },
