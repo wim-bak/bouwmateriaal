@@ -58,6 +58,33 @@ async function buildAll() {
     logLevel: "info",
   });
 
+  console.log("bundling Vercel serverless function (api/index.js)...");
+  await esbuild({
+    entryPoints: ["api/index.ts"],
+    platform: "node",
+    target: "node20",
+    bundle: true,
+    format: "cjs",
+    outfile: "api/index.js",
+    define: {
+      "process.env.NODE_ENV": '"production"',
+    },
+    // Vercel installeert alle dependencies uit package.json, dus we mogen
+    // node_modules-imports als externals houden. shared/ en server/ bundelen
+    // we WEL in de output.
+    external: [
+      "@libsql/client",
+      "@anthropic-ai/sdk",
+      "express",
+      "resend",
+      "drizzle-orm",
+      "drizzle-zod",
+      "nanoid",
+      "zod",
+      "zod-validation-error",
+    ],
+    logLevel: "info",
+  });
 }
 
 buildAll().catch((err) => {
