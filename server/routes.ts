@@ -366,7 +366,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const prompt = buildPrompt(parsed.material, parsed.organization, parsed.challenge, parsed.ambition);
 
       const msg = await anthropic.messages.create({
-        model: "claude_sonnet_4_6",
+        model: "claude-sonnet-4-6",
         max_tokens: 8192,
         messages: [{ role: "user", content: prompt }],
       });
