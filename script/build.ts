@@ -58,24 +58,6 @@ async function buildAll() {
     logLevel: "info",
   });
 
-  // Bundel ook api/index.ts voor Vercel serverless. Vercel-only.
-  if (process.env.VERCEL) {
-    console.log("building Vercel api handler...");
-    await esbuild({
-      entryPoints: ["api/index.ts"],
-      platform: "node",
-      bundle: true,
-      format: "cjs",
-      outfile: "api/index.js",
-      define: {
-        "process.env.NODE_ENV": '"production"',
-      },
-      external: externals,
-      logLevel: "info",
-    });
-    // Verwijder de originele .ts zodat Vercel de .js pakt.
-    await rm("api/index.ts");
-  }
 }
 
 buildAll().catch((err) => {
