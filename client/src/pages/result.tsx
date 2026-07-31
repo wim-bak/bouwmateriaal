@@ -335,7 +335,7 @@ export default function Result() {
         result,
         consent,
       });
-      return (await res.json()) as { pdfBase64: string; filename: string; emailSent?: boolean; emailError?: string };
+      return (await res.json()) as { pdfBase64: string; filename: string };
     },
     onSuccess: (data) => {
       const blob = new Blob([Uint8Array.from(atob(data.pdfBase64), (c) => c.charCodeAt(0))], {
@@ -347,17 +347,10 @@ export default function Result() {
       a.download = data.filename;
       a.click();
       URL.revokeObjectURL(url);
-      if (data.emailSent) {
-        toast({
-          title: "Verstuurd naar je mailbox",
-          description: `De AI-Kansenkaart is naar ${email} gestuurd. De PDF wordt ook direct gedownload.`,
-        });
-      } else {
-        toast({
-          title: "Je PDF wordt gedownload",
-          description: "De kansenkaart staat nu in je downloads. Je gegevens hebben we bewaard, dus we kunnen je later nog een keer bereiken als dat handig is.",
-        });
-      }
+      toast({
+        title: "Je PDF wordt gedownload",
+        description: "De kansenkaart staat nu in je downloads. Je gegevens hebben we bewaard, dus we kunnen je later nog een keer bereiken als dat handig is.",
+      });
     },
     onError: (e: any) => {
       const { title, description } = parseApiError(e, "Er ging iets mis");
@@ -609,7 +602,7 @@ function ResultContent(p: ContentProps) {
                 data-testid="checkbox-consent"
               />
               <Label htmlFor="lead-consent" className="text-xs leading-relaxed text-primary-foreground/85">
-                Ja, gebruik mijn gegevens om de kansenkaart te sturen. Geen marketing, niets gedeeld met derden.
+                Ja, ik ga akkoord dat mijn gegevens worden bewaard zodat Merkvast eventueel later contact kan opnemen. Geen marketing, niets gedeeld met derden.
               </Label>
             </div>
             <Button
