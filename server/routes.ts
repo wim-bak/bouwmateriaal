@@ -37,53 +37,25 @@ const generateSchema = z.object({
 });
 
 function buildPrompt(material: string, organization: string, challenge: string, ambition: string) {
-  return `Je bent een strategisch AI-adviseur voor de bouwmaterialenketen.
+  return `Strategisch AI-adviseur voor bouwmaterialenketen. Analyseer: ${material}.
+Context: ${organization || "?"} | ${challenge || "?"} | ${ambition || "?"}
 
-Analyseer het volgende bouwmateriaal: ${material}
-
-Context:
-- Type organisatie: ${organization || "Onbekend"}
-- Belangrijkste uitdaging: ${challenge || "Onbekend"}
-- Ambitieniveau: ${ambition || "Onbekend"}
-
-Geef een concrete AI-Kansenkaart voor dit materiaal.
-
-Retourneer UITSLUITEND geldig JSON in exact deze structuur:
+Retourneer UITSLUITEND JSON in deze structuur:
 {
-  "materialProfile": {
-    "description": "Korte omschrijving van het materiaal",
-    "properties": ["eigenschap 1", "eigenschap 2", "eigenschap 3", "eigenschap 4"],
-    "customerQuestions": ["vraag 1", "vraag 2", "vraag 3"],
-    "chainChallenges": ["knelpunt 1", "knelpunt 2", "knelpunt 3"]
-  },
-  "opportunities": [
-    {
-      "category": "Artikeldata",
-      "title": "Titel van de kans",
-      "description": "Korte uitleg",
-      "example": "Voorbeeldtoepassing",
-      "expectedValue": "Verwachte waarde",
-      "requiredData": "Benodigde data",
-      "firstTest": "Eerste test binnen 30 dagen",
-      "scores": { "value": 8, "feasibility": 7, "dataNeed": 6, "wow": 5 },
-      "priority": "Quick win",
-      "marketContext": {
-        "maturity": "Bestaat generiek",
-        "existingSolutions": "Concrete tools of bedrijven die dit al aanbieden, bij voorkeur met 2-3 naam-voorbeelden. Wees eerlijk als er alleen generieke tools bestaan die niet specifiek voor dit materiaal getraind zijn.",
-        "gap": "Wat ontbreekt er nog specifiek voor DIT materiaal, DEZE organisatie of DEZE keten. Waarom is er nog ruimte voor eigen initiatief."
-      }
-    }
-  ]
+  "materialProfile": { "description": "korte omschrijving", "properties": ["a","b","c","d"], "customerQuestions": ["a","b","c"], "chainChallenges": ["a","b","c"] },
+  "opportunities": [ { "category": "...", "title": "...", "description": "korte uitleg", "example": "voorbeeld", "expectedValue": "waarde", "requiredData": "data", "firstTest": "test 30 dagen", "scores": { "value": 8, "feasibility": 7, "dataNeed": 6, "wow": 5 }, "priority": "Quick win", "marketContext": { "maturity": "Bestaat generiek", "existingSolutions": "2-3 concrete tools/bedrijven", "gap": "wat mist nog" } } ]
 }
 
-Geef exact 5 kansen totaal, één per categorie in deze volgorde: "Artikeldata", "Klantadvies", "Logistiek & voorraad", "Duurzaamheid & circulariteit", "Commerciële waarde". Priority-waarden zijn: "Quick win", "Strategische kans", "Later onderzoeken", "Niet direct relevant". Alle scores zijn integers van 1-10.
-
-Voor het veld marketContext gelden deze regels:
-- maturity: kies exact één van "Nog niet", "In opkomst", "Bestaat generiek", "Volwassen markt". "Nog niet" = geen bekende tools; "In opkomst" = eerste startups/pilots; "Bestaat generiek" = generieke oplossingen die niet specifiek voor deze branche/materiaal zijn getraind; "Volwassen markt" = meerdere gevestigde aanbieders met branchefocus.
-- existingSolutions: noem waar mogelijk 2-3 concrete tools, platforms of bedrijven die dit al doen (bv. nesting-software, marktplaatsen voor restpartijen, calculatie-tools voor aannemers). Als er niets bestaat, schrijf dat expliciet.
-- gap: leg in één of twee zinnen uit wat er nog mist voor DIT specifieke materiaal, deze keten of deze organisatie. Waarom is er nog ruimte om zelf iets op te bouwen.
-
-Schrijf zakelijk, concreet en bouwspecifiek in het Nederlands. Vermijd algemene AI-taal. Gebruik uitsluitend Latijnse tekens (Nederlands of Engels) — geen Chinese, Japanse, Cyrillische of andere niet-Latijnse karakters, ook niet per ongeluk in samenstellingen of vertalingen.`;
+Regels:
+- Exact 5 kansen, 1 per categorie in volgorde: "Artikeldata", "Klantadvies", "Logistiek & voorraad", "Duurzaamheid & circulariteit", "Commerciële waarde"
+- priority: exact één van "Quick win", "Strategische kans", "Later onderzoeken", "Niet direct relevant"
+- scores: integers 1-10
+- maturity: exact één van "Nog niet", "In opkomst", "Bestaat generiek", "Volwassen markt"
+- existingSolutions: noem 2-3 concrete tools/platforms/bedrijven (bijv. nesting-software, restpartij-marktplaatsen); zeg expliciet als niks bestaat
+- gap: 1-2 zinnen wat mist voor DIT materiaal/keten/organisatie
+- description en example: max 25 woorden
+- Zakelijk, concreet, bouwspecifiek, Nederlands
+- Alleen Latijnse tekens`;
 }
 
 function drawSectionTitle(doc: PDFKit.PDFDocument, text: string) {
@@ -193,7 +165,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const msg = await anthropic.messages.create({
         model: "claude-sonnet-4-6",
-        max_tokens: 8192,
+        max_tokens: 4096,
         messages: [{ role: "user", content: prompt }],
       });
 
