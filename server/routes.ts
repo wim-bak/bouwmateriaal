@@ -12,10 +12,11 @@ const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY + ANTHROPIC_BASE_U
 // Resend email — uses the custom-cred:api.resend.com credential injected via api_credentials.
 // The credential proxy rewrites requests to api.resend.com and adds the Bearer token automatically.
 const RESEND_ENABLED = true;
-// Use onboarding@resend.dev by default so verzending werkt zonder gerifieerd domein.
-// Zet dit op noreply@merkvast.com zodra merkvast.com in Resend geverifieerd is.
-const MAIL_FROM = "Bouwmateriaal AI Lab <onboarding@resend.dev>";
-const MAIL_BCC = "wim@merkvast.com";
+// From-adres: leest LEAD_FROM_EMAIL uit env, valt terug op resend.dev voor lokaal/dev.
+// BCC: leest LEAD_BCC_EMAIL uit env, valt terug op wim@merkvast.com.
+const LEAD_FROM_ADDRESS = process.env.LEAD_FROM_EMAIL || "onboarding@resend.dev";
+const MAIL_FROM = `Bouwmateriaal AI Lab <${LEAD_FROM_ADDRESS}>`;
+const MAIL_BCC = process.env.LEAD_BCC_EMAIL || "wim@merkvast.com";
 
 async function sendLeadEmail(opts: {
   to: string;
