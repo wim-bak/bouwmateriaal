@@ -28,6 +28,7 @@ import { useResult } from "@/lib/result-context";
 import { iconForCategory, priorityStyle, maturityStyle } from "@/lib/opp-meta";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { track } from "@/lib/analytics";
 import type { KansenkaartResult, Opportunity } from "@/lib/types";
 
 const SCORE_LABELS: [keyof Opportunity["scores"], string][] = [
@@ -297,8 +298,15 @@ export default function Result() {
       const res = await apiRequest("POST", "/api/generate", inputs);
       return (await res.json()) as KansenkaartResult;
     },
-    onSuccess: (data) => setResult(data),
+    onSuccess: (data) => {
+      track("generate_success", { material: inputs?.material?.toLowerCase() || "onbekend" });
+      setResult(data);
+    },
     onError: (e: any) => {
+      track("generate_error", {
+        material: inputs?.material?.toLowerCase() || "onbekend",
+        error: (e?.message || "onbekend").slice(0, 80),
+      });
       const { title, description } = parseApiError(e, "Genereren mislukt");
       toast({ title, description, variant: "destructive" });
       // stop de loading-overlay en ga terug naar home als de request geblokkeerd is
@@ -338,6 +346,11 @@ export default function Result() {
       return (await res.json()) as { pdfBase64: string; filename: string };
     },
     onSuccess: (data) => {
+      track("download_pdf", {
+        material: inputs?.material?.toLowerCase() || "onbekend",
+        has_email: !!email,
+        has_company: !!company,
+      });
       const blob = new Blob([Uint8Array.from(atob(data.pdfBase64), (c) => c.charCodeAt(0))], {
         type: "application/pdf",
       });
@@ -353,6 +366,7 @@ export default function Result() {
       });
     },
     onError: (e: any) => {
+      track("download_error", { error: (e?.message || "onbekend").slice(0, 80) });
       const { title, description } = parseApiError(e, "Er ging iets mis");
       toast({ title, description, variant: "destructive" });
     },

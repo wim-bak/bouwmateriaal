@@ -24,6 +24,7 @@ import {
 import { useResult } from "@/lib/result-context";
 import { examples } from "@/data/examples";
 import { iconForCategory, priorityStyle } from "@/lib/opp-meta";
+import { track } from "@/lib/analytics";
 
 const MATERIAL_CHIPS = [
   "isolatie",
@@ -68,6 +69,12 @@ export default function Home() {
       return;
     }
     setError("");
+    track("generate_click", {
+      material: material.trim().toLowerCase(),
+      organization: organization || "leeg",
+      challenge: challenge || "leeg",
+      ambition: ambition || "leeg",
+    });
     startGeneration({ material: material.trim(), organization, challenge, ambition });
     setLocation("/resultaat");
     setTimeout(() => window.scrollTo(0, 0), 30);
@@ -76,6 +83,7 @@ export default function Home() {
   const openExample = (key: string) => {
     const ex = examples.find((e) => e.key === key);
     if (!ex) return;
+    track("example_open", { example: key });
     setPreset(ex.inputs, ex.result);
     setLocation("/resultaat");
     setTimeout(() => window.scrollTo(0, 0), 30);
