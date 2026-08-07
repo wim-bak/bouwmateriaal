@@ -8,12 +8,14 @@ import { ResultProvider } from "@/lib/result-context";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Result from "@/pages/result";
+import Admin from "@/pages/admin";
 
 function AppRouter() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/resultaat" component={Result} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
